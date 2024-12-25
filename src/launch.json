@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Cargo Run",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/cointoss",
+            "args": ["--12"],
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "preLaunchTask": "cargo build"
+        }
+    ]
+}
