@@ -1,3 +1,4 @@
+// main.rst
 use clap::{Parser, ArgAction};
 use rand::Rng; // For randomizing remaining flips
 
