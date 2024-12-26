@@ -2,6 +2,13 @@ use clap::{Parser, ArgAction};
 use rand::Rng; // For randomizing remaining flips
 
 /// A program to generate entropy through coin flipping.
+/// GNU General Public License v3.0
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+
 #[derive(Parser, Debug)]
 #[command(
     author = "Rich Hollenbeck <rghollenbeck@protonmail.com>",
