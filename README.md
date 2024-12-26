@@ -22,7 +22,7 @@ A Linux command-line tool for generating Bitcoin BIP39 seed phrases using the mu
 ## Usage
 Run the following command to generate entropy:
 ```bash
-cargo run -- --words 12
+cargo run -- --12
 ```
 
 Options:
