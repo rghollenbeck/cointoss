@@ -1,3 +1,91 @@
+// cointoss: A Linux command-line tool for generating Bitcoin BIP39 seed phrases.
+//
+// Functions Overview:
+// 1. parse_arguments(): Parses command-line arguments using the clap crate to determine the desired entropy size.
+// 2. prompt_coin_flips(): Guides the user through entering or generating 128 coin tosses for entropy.
+// 3. generate_checksum(): Appends a checksum to the bitstream based on BIP39 standards.
+// 4. bitstream_to_mnemonic(): Converts the final bitstream into a valid mnemonic by mapping bits to the BIP39 wordlist.
+//
+// This program supports generating entropy for 12, 15, 18, 21, or 24-word BIP39 seed phrases, ensuring
+// compatibility with wallet standards. It includes user-friendly error handling and detailed guidance throughout.
+//
+// Usage:
+//   - Run with the appropriate entropy flag: `--12`, `--15`, etc.
+//   - For help: `--help`
+
+/* 
+## Function Overview for `main.rs`
+
+This section provides a summary of the functions used in this program and their purpose. 
+The functions are ordered to follow the logical flow of the program's workflow.
+
+### 1. `parse_args`
+**Purpose**: Parses command-line arguments to determine the number of seed phrase words (12, 15, 18, 21, or 24) or display the help message. 
+**Details**: Ensures valid input and sets the appropriate number of coin tosses required based on the entropy size.
+
+---
+
+### 2. `prompt_for_coin_tosses`
+**Purpose**: Guides the user through entering coin flips (`h` for heads, `t` for tails), randomizing remaining flips, or exiting the program. 
+**Details**: Handles input validation and builds the initial entropy bitstream.
+
+---
+
+### 3. `fill_bitstream_with_heads`
+**Purpose**: Fills the bitstream with all heads (`1`) when the user selects the `fill` option.
+**Details**: Used for testing purposes to generate predictable entropy for debugging.
+
+---
+
+### 4. `calculate_checksum`
+**Purpose**: Calculates the checksum bits for the given entropy using SHA-256. 
+**Details**: Extracts the first `(ENT / 32)` bits of the hash to append to the bitstream.
+
+---
+
+### 5. `append_checksum`
+**Purpose**: Appends the calculated checksum bits to the entropy bitstream.
+**Details**: Ensures the final bitstream conforms to BIP39 standards.
+
+---
+
+### 6. `convert_to_bitstream`
+**Purpose**: Converts user-entered coin tosses into a binary bitstream.
+**Details**: Translates coin flips (`h` or `t`) into `1` or `0` bits.
+
+---
+
+### 7. `bitstream_to_mnemonic`
+**Purpose**: Divides the final bitstream into 11-bit chunks and maps them to indices in the BIP39 word list.
+**Details**: Constructs the mnemonic phrase and verifies its correctness.
+
+---
+
+### 8. `load_wordlist`
+**Purpose**: Loads the BIP39 English word list into memory.
+**Details**: Reads the word list file or hardcoded data and makes it accessible for index mapping.
+
+---
+
+### 9. `print_mnemonic`
+**Purpose**: Outputs the final mnemonic phrase to the user.
+**Details**: Formats the mnemonic as a space-separated string for easy copying and verification.
+
+---
+
+### 10. `print_help`
+**Purpose**: Displays the usage instructions for the program.
+**Details**: Provides details on how to use the command-line arguments effectively.
+
+---
+
+### 11. `main`
+**Purpose**: The entry point of the program that orchestrates the entire workflow.
+**Details**: Calls the above functions in sequence to parse input, generate entropy, calculate the checksum, and produce the final mnemonic phrase.
+
+*/
+
+
 use clap::{Parser, ArgAction};
 use rand::Rng; // For randomizing remaining flips
 use sha2::{Sha256, Digest};
