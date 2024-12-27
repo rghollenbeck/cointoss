@@ -162,7 +162,7 @@ fn main() {
     // Extract and append the checksum
     let final_bitstream = extract_checksum(bitstream, sha256_hash, entropy_bits as usize);
 
-    println!("Final bitstream with checksum: {:?}", final_bitstream);
+    // println!("Line 165: Final bitstream with checksum: {:?}", final_bitstream);
 
     // Convert bitstream to mnemonic
     let mnemonic = bitstream_to_mnemonic(final_bitstream, &BIP39_WORDLIST);
@@ -260,7 +260,7 @@ fn prompt_for_coin_flips(entropy_bits: u16) -> Vec<u8> {
 
 // Hash the bitstream using SHA-256
 fn hash_bitstream(bitstream: &[u8]) -> Vec<u8> {
-    println!("Bitstream passed to SHA-256: {:?}", bitstream);
+    // println!("Bitstream passed to SHA-256: {:?}", bitstream);
     let mut hasher = Sha256::new();
     hasher.update(bitstream);
     hasher.finalize().to_vec()
@@ -324,13 +324,13 @@ fn extract_checksum(bitstream: Vec<u8>, sha256_hash: Vec<u8>, ent: usize) -> Vec
             final_bitstream.push((byte >> bit_index) & 1);
         }
     }
-
+/*
     println!(
         "Final bitstream before checksum append: {:?} (bit length: {})",
         final_bitstream,
         final_bitstream.len()
     );
-
+*/
     // Append checksum bits
     final_bitstream.extend(checksum_bits);
 
@@ -341,13 +341,13 @@ fn extract_checksum(bitstream: Vec<u8>, sha256_hash: Vec<u8>, ent: usize) -> Vec
         "Final bitstream must have {} bits",
         ent + checksum_size
     );
-
+/*
     println!(
         "Final bitstream with checksum: {:?} (bit length: {})",
         final_bitstream,
         final_bitstream.len()
     );
-
+*/
     final_bitstream
 }
 
@@ -362,11 +362,11 @@ fn extract_checksum(bitstream: Vec<u8>, sha256_hash: Vec<u8>, ent: usize) -> Vec
 The bitstream_to_mnemonic function expects exactly 132 bits for a 12-word mnemonic (128 bits of entropy + 4 bits of checksum). Double-check that the final bitstream passed into this function has this exact length.
 */
 fn bitstream_to_mnemonic(final_bitstream: Vec<u8>, wordlist: &[&str; 2048]) -> Vec<String> {
-    println!(
-        "at line 239 in fn bitstream_to_mnemonic() Final bitstream: {:?} (bit length: {})",
-        final_bitstream,
-        final_bitstream.len()
-    );
+//    println!(
+//        "at line 239 in fn bitstream_to_mnemonic() Final bitstream: {:?} (bit length: {})",
+//        final_bitstream,
+//        final_bitstream.len()
+//    );
 
     // Ensure the concatenated bits match the expected 132 bits
     if final_bitstream.len() != 132 {
@@ -379,7 +379,7 @@ fn bitstream_to_mnemonic(final_bitstream: Vec<u8>, wordlist: &[&str; 2048]) -> V
     // Divide into 11-bit chunks
 	// Divide into 11-bit chunks
 let mut mnemonic = Vec::new();
-println!("Final bitstream: {:?}", final_bitstream);
+// println!("Line 382: Final bitstream: {:?}", final_bitstream);
 
 for chunk_start in (0..132).step_by(11) {
     let chunk = &final_bitstream[chunk_start..chunk_start + 11];
@@ -387,9 +387,9 @@ for chunk_start in (0..132).step_by(11) {
     assert!(index <= 2047, "Index out of range: {}", index); // Check that the index is valid
     mnemonic.push(wordlist[index as usize].to_string());
 }
-
-println!("Generated mnemonic: {:?}", mnemonic);
-
+/*
+println!("line 391: Generated mnemonic: {:?}", mnemonic);
+*/
 mnemonic // explicitly return the mnemonic vector
 
 }
