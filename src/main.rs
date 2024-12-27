@@ -184,13 +184,14 @@ fn get_entropy_bits(words: u8) -> u16 {
     }
 }
 
-// Prompt the user for coin flips
+// Prompt the user for coin flips// Prompt the user for coin flips
 fn prompt_for_coin_flips(entropy_bits: u16) -> Vec<u8> {
     let mut flips = Vec::new();
     println!("Please input {} coin flips (h for heads, t for tails):", entropy_bits);
     println!("Enter 'qf' to quit flipping and randomize the rest.");
     println!("Enter 'qq' to quit the program.");
-	println!("Enter 'fill' to fill the data with all heads.");
+    println!("Enter 'preload' to load a predefined binary stream for testing.");
+    println!("Enter 'fill' to fill the data with all heads.");
 
     for _ in 0..entropy_bits {
         let mut input = String::new();
@@ -220,13 +221,29 @@ fn prompt_for_coin_flips(entropy_bits: u16) -> Vec<u8> {
                     println!("Exiting the program.");
                     std::process::exit(0);
                 }
-				"fill" => {
-					println!("Filling the remaining flips with heads...");
-					let remaining = (entropy_bits as usize) - flips.len();
-					flips.extend(vec![1; remaining]); // Extend flips with `1`s
-					return flips; // Exit early with completed flips
-				}
-                _ => println!("Invalid input. Please enter 'h', 't', 'qf', 'qq', or 'fill'."),
+                "preload" => {
+                    println!("Preloading binary stream...");
+                    let binary_segments = vec![
+                        "11111110000", "11111110000", "11111110000", "11111110000",
+                        "11111110000", "11111110000", "11111110000", "11111110000",
+                        "11111110000", "11111110000", "11111110000", "1111111",
+                    ];
+                    return binary_segments
+                        .iter()
+                        .flat_map(|segment| {
+                            segment
+                                .chars()
+                                .map(|bit| bit.to_digit(2).unwrap() as u8)
+                        })
+                        .collect();
+                }
+                "fill" => {
+                    println!("Filling the remaining flips with heads...");
+                    let remaining = (entropy_bits as usize) - flips.len();
+                    flips.extend(vec![1; remaining]);
+                    return flips;
+                }
+                _ => println!("Invalid input. Please enter 'h', 't', 'qf', 'qq', 'preload', or 'fill'."),
             }
             input.clear();
         }
@@ -234,6 +251,9 @@ fn prompt_for_coin_flips(entropy_bits: u16) -> Vec<u8> {
 
     flips
 }
+
+
+
 
 
 
@@ -357,14 +377,21 @@ fn bitstream_to_mnemonic(final_bitstream: Vec<u8>, wordlist: &[&str; 2048]) -> V
     }
 
     // Divide into 11-bit chunks
-    let mut mnemonic = Vec::new();
-    for chunk_start in (0..132).step_by(11) {
-        let chunk = &final_bitstream[chunk_start..chunk_start + 11];
-        let index = chunk.iter().fold(0, |acc, &bit| (acc << 1) | bit);
-        mnemonic.push(wordlist[index as usize].to_string());
-    }
+	// Divide into 11-bit chunks
+let mut mnemonic = Vec::new();
+println!("Final bitstream: {:?}", final_bitstream);
 
-    mnemonic
+for chunk_start in (0..132).step_by(11) {
+    let chunk = &final_bitstream[chunk_start..chunk_start + 11];
+    let index: u16 = chunk.iter().fold(0, |acc, &bit| (acc << 1) | bit as u16);
+    assert!(index <= 2047, "Index out of range: {}", index); // Check that the index is valid
+    mnemonic.push(wordlist[index as usize].to_string());
+}
+
+println!("Generated mnemonic: {:?}", mnemonic);
+
+mnemonic // explicitly return the mnemonic vector
+
 }
 
 
