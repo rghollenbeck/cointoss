@@ -1,1 +1,1 @@
-./target/debug/cointoss --21
+./target/debug/cointoss --18

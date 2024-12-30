@@ -1,4 +1,4 @@
-// cointoss: A Linux command-line tool for generating Bitcoin BIP39 seed phrases.
+// cointoss version 0.1.1: A Linux command-line tool for generating Bitcoin BIP39 seed phrases.
 //
 // Functions Overview:
 // 1. parse_arguments(): Parses command-line arguments using the clap crate to determine the desired entropy size.
@@ -90,11 +90,12 @@ use clap::{Parser, ArgAction};
 use rand::Rng; // For randomizing remaining flips
 use sha2::{Sha256, Digest};
 
+
 #[derive(Parser, Debug)]
 #[command(
     author = "Rich Hollenbeck <rghollenbeck@protonmail.com>",
-    version = "0.1.0",
-    about = "A utility to generate entropy for a BIP39 mnemonic.",
+    version = "0.1.1",
+    about = "A utility to generate a BIP39 mnemonic using the tossing of scoin",
     long_about = "This utility, `cointoss`, converts multiple tosses of a coin into a Bitcoin BIP39 seed phrase. A command-line switch indicates whether to test for a 12, 15, 18, 21, or 24-word phrase."
 )]
 struct Args {
@@ -126,9 +127,10 @@ const BIP39_WORDLIST: [&str; 2048] = [
 
 
 
-
-//	new main
 fn main() {
+    //start with a clean screen
+     print!("{}[2J", 27 as char);
+    
     // Parse command-line arguments
     let args = Args::parse();
 
@@ -144,11 +146,12 @@ fn main() {
     } else if args.twenty_four {
         24
     } else {
-        panic!("No valid word count specified. Use --help for more information.");
+        eprintln!("Error: No valid word count specified. Use --help for more information.");
+        std::process::exit(1); // Exit gracefully
     };
 
-		// Calculate entropy bits
-		let entropy_bits = get_entropy_bits(words);
+    // Calculate entropy bits
+    let entropy_bits = get_entropy_bits(words);
 
     // Prompt the user for coin flips
     let coin_flips = prompt_for_coin_flips(entropy_bits);
@@ -162,10 +165,8 @@ fn main() {
     // Extract and append the checksum
     let final_bitstream = extract_checksum(bitstream, sha256_hash, entropy_bits as usize);
 
-    // println!("Line 165: Final bitstream with checksum: {:?}", final_bitstream);
-
     // Convert bitstream to mnemonic
-    let mnemonic = bitstream_to_mnemonic(final_bitstream, &BIP39_WORDLIST);
+    let mnemonic = bitstream_to_mnemonic(final_bitstream, &BIP39_WORDLIST, entropy_bits);
 
     // Print the mnemonic
     println!("Mnemonic: {:?}", mnemonic.join(" "));
@@ -183,6 +184,7 @@ fn get_entropy_bits(words: u8) -> u16 {
         _ => panic!("Invalid number of words. Choose 12, 15, 18, 21, or 24."),
     }
 }
+
 
 // Prompt the user for coin flips// Prompt the user for coin flips
 fn prompt_for_coin_flips(entropy_bits: u16) -> Vec<u8> {
@@ -221,22 +223,13 @@ fn prompt_for_coin_flips(entropy_bits: u16) -> Vec<u8> {
                     println!("Exiting the program.");
                     std::process::exit(0);
                 }
+                
                 "preload" => {
                     println!("Preloading binary stream...");
-                    let binary_segments = vec![
-                        "11111110000", "11111110000", "11111110000", "11111110000",
-                        "11111110000", "11111110000", "11111110000", "11111110000",
-                        "11111110000", "11111110000", "11111110000", "1111111",
-                    ];
-                    return binary_segments
-                        .iter()
-                        .flat_map(|segment| {
-                            segment
-                                .chars()
-                                .map(|bit| bit.to_digit(2).unwrap() as u8)
-                        })
-                        .collect();
-                }
+                    let required_bits = entropy_bits as usize;
+                    let binary_stream: Vec<u8> = (0..required_bits).map(|_| 1).collect(); // Generate a stream of 1s
+                    return binary_stream;
+                }             
                 "fill" => {
                     println!("Filling the remaining flips with heads...");
                     let remaining = (entropy_bits as usize) - flips.len();
@@ -354,44 +347,30 @@ fn extract_checksum(bitstream: Vec<u8>, sha256_hash: Vec<u8>, ent: usize) -> Vec
 
 
 
-
-
-
-
 /*
-The bitstream_to_mnemonic function expects exactly 132 bits for a 12-word mnemonic (128 bits of entropy + 4 bits of checksum). Double-check that the final bitstream passed into this function has this exact length.
+The bitstream_to_mnemonic function dynamically calculates the total bit length based on the given entropy size and checksum bits. It expects the final_bitstream to contain exactly ENT + (ENT / 32) bits, where ENT is the entropy size in bits. This ensures compatibility with all valid BIP39 mnemonic lengths (12, 15, 18, 21, or 24 words). Double-check that the final_bitstream matches the expected total length before passing it to this function.
 */
-fn bitstream_to_mnemonic(final_bitstream: Vec<u8>, wordlist: &[&str; 2048]) -> Vec<String> {
-//    println!(
-//        "at line 239 in fn bitstream_to_mnemonic() Final bitstream: {:?} (bit length: {})",
-//        final_bitstream,
-//        final_bitstream.len()
-//    );
+fn bitstream_to_mnemonic(final_bitstream: Vec<u8>, wordlist: &[&str; 2048], entropy_bits: u16) -> Vec<String> {
+    let checksum_bits = entropy_bits / 32;
+    let total_bits = entropy_bits + checksum_bits;
 
-    // Ensure the concatenated bits match the expected 132 bits
-    if final_bitstream.len() != 132 {
+    // Ensure the concatenated bits match the expected length
+    if final_bitstream.len() != total_bits as usize {
         panic!(
-            "Unexpected bitstream length: {} (expected 132)",
-            final_bitstream.len()
+            "Unexpected bitstream length: {} (expected {})",
+            final_bitstream.len(),
+            total_bits
         );
     }
 
-    // Divide into 11-bit chunks
-	// Divide into 11-bit chunks
-let mut mnemonic = Vec::new();
-// println!("Line 382: Final bitstream: {:?}", final_bitstream);
+    let mut mnemonic = Vec::new();
+    for chunk_start in (0..total_bits as usize).step_by(11) {
+        let chunk = &final_bitstream[chunk_start..chunk_start + 11];
+        let index: u16 = chunk.iter().fold(0, |acc, &bit| (acc << 1) | bit as u16);
+        assert!(index <= 2047, "Index out of range: {}", index); // Ensure valid index
+        mnemonic.push(wordlist[index as usize].to_string());
+    }
 
-for chunk_start in (0..132).step_by(11) {
-    let chunk = &final_bitstream[chunk_start..chunk_start + 11];
-    let index: u16 = chunk.iter().fold(0, |acc, &bit| (acc << 1) | bit as u16);
-    assert!(index <= 2047, "Index out of range: {}", index); // Check that the index is valid
-    mnemonic.push(wordlist[index as usize].to_string());
+    mnemonic
 }
-/*
-println!("line 391: Generated mnemonic: {:?}", mnemonic);
-*/
-mnemonic // explicitly return the mnemonic vector
-
-}
-
-
+ 
