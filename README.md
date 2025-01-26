@@ -4,7 +4,7 @@ A Linux command-line tool for generating Bitcoin BIP39 seed phrases using the mu
 ## Features
 - Supports generating entropy for 12, 15, 18, 21, or 24-word BIP39 seed phrases.
 - Command-line interface with clear usage instructions.
-- GPL-3.0 licensed for full transparency and open-source contribution.
+- This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
 
 ## Installation
 1. Clone the repository:
