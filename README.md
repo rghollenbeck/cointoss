@@ -1,5 +1,5 @@
 # cointoss
-A Linux command-line tool for generating Bitcoin BIP39 seed phrases using the multiple flipping of coins.
+A Linux command-line tool for generating Bitcoin BIP39 seed phrases using the multiple flipping of a coin.
 
 ## Features
 - Supports generating entropy for 12, 15, 18, 21, or 24-word BIP39 seed phrases.
